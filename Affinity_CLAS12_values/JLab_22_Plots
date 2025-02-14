@@ -1,1 +1,1223 @@
+#!/usr/bin/env python
+import numpy as np
+import pandas as pd
+#from tools import save, load, lprint, checkdir
+import seaborn as sns
+
+
+#--matplotlib
+import matplotlib
+matplotlib.use('PS')
+matplotlib.rc('text',usetex=True)
+from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.lines import Line2D
+import pylab as py
+import matplotlib.pyplot as plt
+plt.rcParams["font.family"] = "Times New Roman"
+import matplotlib.gridspec as gridspec
+
+from plottools import above, below, left, right, plotEIC, plotEIC1, custom_label, color_plot, color_plot_hull
+
+%matplotlib inline
+
+#fname = 'data/jlab22gridmyaffinity0.3.xlsx'
+fname = '/Users/tetiana/Documents/Affinity/Affinity_CLAS12_values/data/jlab22_pi0affinity_1k_events_0.7.xlsx'
+data_averaged=pd.read_excel(fname)
+
+#fname = 'data/jlab22gridmyaffinity0.3.xlsx'
+fname = '/Users/tetiana/Documents/Affinity/Affinity_CLAS12_values/data/jlab22_pi0affinity_1k_events_0.7.xlsx'
+data=pd.read_excel(fname)
+
+data.pT.max()
+
+len(data)
+
+len(data.R2)
+
+np.max(data.R2)
+
+data.keys()
+
+First let us define plotting function
+
+My calculations of ranges in Rs:
+
+R0max = 6.343116872849209, R0min = 4.1559429252645325e-11
+
+ R1max = 6320379.617295824, R1min = 0.000963768367557582
+
+ R2max = 186.36485437230678, R2min = 0.0014767330385119174
+
+ R3max = 620.3860153748011, R3min = 3.655046856807419e-11
+
+ R4max = 625.8780890421748, R4min = 2.676056393314893e-11
+
+ R1pmax = 7.7083333333333375, R1pmin = 0.04573170731707315
+We write otput into a file  data/jlab22gridmyaffinity0.3.xlsx
+
+
+
+**Usage**
+
+Any affinity index, such as tmd-aff
+lower,upper=0.0,0.938
+    
+    
+
+len(data.query("tmdaff>0.68"))
+
+len(data.query("tmdaff>0.95"))
+
+data["Q"]=np.sqrt(data["Q2"])
+data["qToverQ"] = data["qT"]/data["Q"]
+
+dataVladimirov = data.query("Q2>=4 and qT/Q<=0.25")
+print("Length Vladimirov",len(dataVladimirov))
+print("Max affinity Vladimirov",max(dataVladimirov.tmdaff))
+print("Min affinity Vladimirov",min(dataVladimirov.tmdaff))
+cut = 0.68
+msg = "tmdaff>"+str(cut)
+print("Length Vladimirov with Aff>",cut,"=",len(dataVladimirov.query(msg)))
+dataAff = data.query(msg)
+print("Length Aff>",cut,"=",len(dataAff))
+print("Length Aff not in Vladimirov",len(dataAff.query("Q2<4 or qT/Q>0.25")))
+
+data["PaviapTcut"] = data.pT
+for i in range(len(data)):
+    data.PaviapTcut[i] = min(0.2*data.Q[i], 0.7*data.Q[i]*data.z[i])+0.5
+dataPavia = data.query("Q2>=1.4 and 0.2 < z < 0.74 and pT<=PaviapTcut")
+print("Length Pavia",len(dataPavia))
+print("Max affinity Pavia",max(dataPavia.tmdaff))
+print("Min affinity Pavia",min(dataPavia.tmdaff))
+
+msg = "tmdaff>"+str(cut)
+print("Length Pavia with Aff>",cut,"=",len(dataPavia.query(msg)))
+dataAff = data.query(msg)
+print("Length Aff>",cut,"=",len(dataAff))
+print("Length Aff not in Pavia",len(dataAff.query("Q2<1.4 or 0.2 > z > 0.74 or pT>=PaviapTcut")))
+print("Length Pavia not in Vladimirov",len(dataPavia.query("Q2<4 or qT/Q>0.25")))
+
+    
+
+len(dataVladimirov.query(msg))/len(dataVladimirov)
+
+dataJam = data.query("0.2<z<0.6 and Q2>1.63 and 0.2<pT<0.9")
+print("Length Jam",len(dataJam))
+print("Max affinity Jam",max(dataJam.tmdaff))
+print("Min affinity Jam",min(dataJam.tmdaff))
+
+msg = "tmdaff>"+str(cut)
+dataAff = data.query(msg)
+print("Length Jam with Aff>",cut,"=",len(dataJam.query(msg))," i.e. ",len(dataJam.query(msg))/len(dataJam)*100,"%")
+
+print("Length Aff>",cut,"=",len(dataAff))
+print("Length Aff not in Jam",len(dataAff.query("0.2>z or z>0.6 or Q2<1.63 or pT<0.2 or pT>0.9")))
+
+print("Length Jam in Vladimirov",len(dataJam.query("Q2>=4 and qT/Q<=0.25")))
+
+dataTmd = data.query("tmdaff>0.05")
+dataCollinear = data.query("collinearaff>0.05")
+dataCollinearHigh = data.query("collinearhighorderaff>0.05")
+dataCollinearLow = data.query("collinearloworderaff>0.05")
+dataSoft = data.query("softaff>0.05")
+dataTarget = data.query("targetaff>0.05")
+dataUnclassified = data.query("unclassifiedaff>0.05")
+
+print("Tmd=",len(dataTmd))
+print("Collinear=",len(dataCollinear))
+print("CollinearHigh=",len(dataCollinearHigh))
+print("CollinearLow=",len(dataCollinearLow))
+
+
+print("Soft=",len(dataSoft))
+print("Target=",len(dataTarget))
+print("Unclassified=",len(dataUnclassified))
+
+len(data.query("tmdaff>0.68"))
+
+len(data.query("tmdaff>0.85"))
+
+len(data.query("collinearaff>0.68"))
+
+len(data.query("collinearaff>0.95"))
+
+length = len(dataCollinear)/len(data)
+string='%.2f' % length
+print(string)
+
+# Let us play with Seaborn
+
+dataTsb = data.query("tmdaff>0.68")
+dataTsb = dataTsb[['pT', 'Q2', 'x', 'z','tmdaff', 'R0', 'R1',
+       'R1p', 'R2', 'R3', 'R4', 'R5', 'qT', 'xN', 'zN', 'yp', 'yh', 'yi',
+       'yf','qToverQ']]
+
+sns.set_context("paper", font_scale=1.5)
+ax = sns.pairplot(dataTsb,vars=['tmdaff','qToverQ','yh'],diag_kind='kde',
+             plot_kws = {'alpha': 0.5, 's': 5.5, 'edgecolor': 'k'})
+#specfiy axis labels
+replacements = {'qToverQ': r'\boldmath{$q_T/Q$}', 'yh': r'\boldmath{$y_h$}',
+                'tmdaff': r'\boldmath{$\rm TMD\; affinity$}'}
+
+for i in range(3):
+    for j in range(3):
+        xlabel = ax.axes[i][j].get_xlabel()
+        ylabel = ax.axes[i][j].get_ylabel()
+        if xlabel in replacements.keys():
+            ax.axes[i][j].set_xlabel(replacements[xlabel],fontsize=18)
+        if ylabel in replacements.keys():
+            ax.axes[i][j].set_ylabel(replacements[ylabel],fontsize=18)
+# for legend text
+py.savefig('./Figs/tmd_sb.pdf')             
+
+sns.pairplot(dataTsb,vars=['R1',
+       'R1p'],diag_kind='kde',
+             plot_kws = {'alpha': 0.2, 's': 10, 'edgecolor': 'k'})
+
+ax = sns.pairplot(data[data['collinearaff']>=0.68],vars=['collinearaff','qToverQ','yh'],diag_kind='kde',
+             plot_kws = {'alpha': 0.2, 's': 10, 'edgecolor': 'k'})
+#specfiy axis labels
+replacements = {'qToverQ': r'$q_T/Q$', 'yh': r'$y_h$',
+                'collinearaff': 'Collinear Affinity'}
+
+for i in range(3):
+    for j in range(3):
+        xlabel = ax.axes[i][j].get_xlabel()
+        ylabel = ax.axes[i][j].get_ylabel()
+        if xlabel in replacements.keys():
+            ax.axes[i][j].set_xlabel(replacements[xlabel])
+        if ylabel in replacements.keys():
+            ax.axes[i][j].set_ylabel(replacements[ylabel])
+py.savefig('./Figs/collinear_sb.pdf')
+
+datatest = data.query('0.68 < collinearaff < 0.8')
+ax = sns.pairplot(datatest,vars=['collinearaff','qToverQ','yh'],diag_kind='kde',
+             plot_kws = {'alpha': 0.2, 's': 10, 'edgecolor': 'k'})
+#specfiy axis labels
+replacements = {'qToverQ': r'$q_T/Q$', 'yh': r'$y_h$',
+                'collinearaff': 'Collinear Affinity'}
+
+for i in range(3):
+    for j in range(3):
+        xlabel = ax.axes[i][j].get_xlabel()
+        ylabel = ax.axes[i][j].get_ylabel()
+        if xlabel in replacements.keys():
+            ax.axes[i][j].set_xlabel(replacements[xlabel])
+        if ylabel in replacements.keys():
+            ax.axes[i][j].set_ylabel(replacements[ylabel])
+py.savefig('./Figs/collinear_sb.pdf')
+
+ax = sns.pairplot(data[data['softaff']>=0.1],vars=['softaff','qToverQ','yh'],diag_kind='kde',
+             plot_kws = {'alpha': 0.2, 's': 10, 'edgecolor': 'k'})
+#specfiy axis labels
+replacements = {'qToverQ': r'$q_T/Q$', 'yh': r'$y_h$',
+                'softaff': 'Soft Affinity'}
+
+for i in range(3):
+    for j in range(3):
+        xlabel = ax.axes[i][j].get_xlabel()
+        ylabel = ax.axes[i][j].get_ylabel()
+        if xlabel in replacements.keys():
+            ax.axes[i][j].set_xlabel(replacements[xlabel])
+        if ylabel in replacements.keys():
+            ax.axes[i][j].set_ylabel(replacements[ylabel])
+py.savefig('./Figs/soft_sb.pdf')
+
+plt.hist(data.R0, bins=50)
+
+fig, ax = plt.subplots()
+
+
+length=len(dataCollinear)/len(data)*100
+string = 'Collinear QCD %.2f' % length
+string = string + '\%'
+plt.hist(dataCollinear.yh,histtype='stepfilled',  bins=50, alpha = 0.8,label=string,color="g",ec="g")
+
+
+length=len(dataCollinearHigh)/len(data)*100
+string = 'High order QCD %.1f' % length
+string = string + '\%'
+plt.hist(dataCollinearHigh.yh,histtype='stepfilled',  bins=50, alpha = 0.3,label=string,color="orange",ec="orange")
+
+length=len(dataCollinearLow)/len(data)*100
+string = 'Low order QCD %.1f' % length
+string = string + '\%'
+plt.hist(dataCollinearLow.yh,histtype='stepfilled',  bins=50, alpha = 0.3,label=string,color="r",ec="r")
+
+
+
+
+length=len(dataSoft)/len(data)*100
+string = 'Soft %.1f' % length
+string = string + '\%'
+plt.hist(dataSoft.yh,histtype='stepfilled',  bins=50, alpha = 0.8,label=string,color="orange",ec="orange")
+
+length=len(dataTmd)/len(data)*100
+string = 'TMD %.1f' % length
+string = string + '\%'
+plt.hist(dataTmd.yh,histtype='stepfilled', bins=50, alpha = 0.3, label=string,color="b",ec="b")
+
+length=len(dataTarget)/len(data)*100
+string = 'Target %.1f' % length
+string = string + '\%'
+plt.hist(dataTarget.yhtarget,histtype='stepfilled',  bins=50, alpha = 0.8,label=string,color="r",ec="r")
+
+
+
+ax.tick_params(axis='both', which='minor', labelsize=20, direction='in')
+
+
+ax.set_xlabel(r'$y_h$',size=20)
+
+plt.title('JLab 22',size = 20)
+
+ax.legend(loc="upper right")
+plt.savefig("./Figs/JLab22_data_y_pi0_Codegen_change.pdf", bbox_inches='tight')
+plt.show()
+
+fig, ax = plt.subplots()
+
+plt.xticks(fontsize=18)
+plt.yticks(fontsize=18)
+
+
+length=len(dataCollinear)/len(data)*100
+string = "\\boldmath{$\\rm collinear\\; %.1f" % length
+string = string + "\% $}"
+plt.hist(dataCollinear.yh,histtype='stepfilled',  bins=50, alpha = 0.8,label=string,color="g",ec="g")
+plt.hist(dataCollinear.yh,histtype=u'step',  bins=50, alpha = 1,color="g",ec="g")
+
+
+
+length=len(dataSoft)/len(data)*100
+string = "\\boldmath{$\\rm central\\; %.1f" % length
+string = string + "\% $}"
+
+plt.hist(dataSoft.yh,histtype='stepfilled',  bins=50, alpha = 0.5,label=string,color="orange",ec="orange")
+plt.hist(dataSoft.yh,histtype=u'step',  bins=50, alpha = 1,color="orange",ec="orange")
+
+
+length=len(dataTmd)/len(data)*100
+string = "\\boldmath{$\\rm TMD\\; %.1f" % length
+string = string + "\% $}"
+
+plt.hist(dataTmd.yh,histtype='stepfilled', bins=50, alpha = 0.5, label=string,color="b",ec="b")
+plt.hist(dataTmd.yh,histtype=u'step', bins=50, alpha = 1,color="b",ec="b")
+
+
+length=len(dataTarget)/len(data)*100
+string = "\\boldmath{$\\rm target\\; %.1f" % length
+string = string + "\% $}"
+
+plt.hist(dataTarget.yhtarget,histtype='stepfilled',  bins=50, alpha = 0.8,label=string,color="r",ec="r")
+plt.hist(dataTarget.yhtarget,histtype=u'step',  bins=50, alpha =1,color="r",ec="r")
+
+
+
+
+ax.set_xlim([-7, 7])
+ax.tick_params(axis='both', which='minor', labelsize=20, direction='in')
+
+
+ax.set_xlabel(r'\boldmath{$y_h$}',size=20)
+
+#plt.title('EIC',size = 20)
+ax.text(0.75,0.85,r"\boldmath{$\rm JLab~22$}",fontsize=20,transform=ax.transAxes)
+
+
+ax.legend(loc="upper left",prop={"size":13.5},frameon=0,handletextpad=0.2,markerscale=2.,handlelength=1.25)
+plt.savefig("./Figs/JLab22_data_pip_MC.pdf", bbox_inches='tight')
+plt.show()
+
+plt.hist(dataUnclassified.yh, bins=50)
+
+data["Q"]=np.sqrt(data["Q2"])
+data["qToverQ"] = data["qT"]/data["Q"]
+fig, ax, vert, hor = color_plot(data, "qToverQ", "yh", cmap="none", alpha=0.01, cbarshow = False)
+ax.set_yscale("log")
+
+
+ax.set_ylim([0.001, 500])
+#ax.set_xscale("log")
+ax.set_xlim([-7, 7])
+#plt.axhline(0.5, 0, 0.4)
+#plt.axvline(0.5, 0, 0.4)
+plt.title("$\\rm JLab 22$",size=20)
+#plt.plot(x,y1, 'b')
+
+
+
+plt.savefig("./Figs/JLab22_data_yh_qTQ.pdf", bbox_inches='tight')
+plt.show()
+
+data["Q"]=np.sqrt(data["Q2"])
+data["qToverQ"] = data["qT"]/data["Q"]
+#fig, ax, vert, hor = color_plot(dataTmd, "qToverQ", "yh", cmap="none", alpha=0.01, cbarshow = False)
+fig, ax = plt.subplots()
+
+
+plt.xticks(fontsize=10)
+plt.yticks(fontsize=14)
+
+
+hor = "yh"
+vert = "qToverQ"
+
+ax.tick_params(axis='x', which='both', labelsize=16, direction='in')
+ax.tick_params(axis='y', which='minor', labelsize=20, direction='in')
+
+
+ax.set_xlim(-7,7)
+ax.set_xticks([-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7])
+ax.set_xticklabels([r'', r'$-6$',r'',r'$-4$',r'',r'$-2$',r'',r'$0$',r'',r'$2$',r'',r'$4$',r'',r'$6$',r''])
+
+ax.scatter(dataTmd[hor], 8*dataTmd[vert], c="b", alpha=0.5, s=5.5,label=r'\boldmath{$\rm TMD$}')
+ax.scatter(dataCollinear[hor], 4*dataCollinear[vert], c="g", alpha=0.5, s=5.5,label=r'\boldmath{$\rm collinear$}')
+ax.scatter(dataSoft[hor], 2*dataSoft[vert], c="orange", alpha=0.5, s=5.5,label=r'\boldmath{$\rm soft$}')
+#ax.scatter(dataTarget[hor], dataTarget[vert], c="r", alpha=0.5,label=r'$target$')
+if hor == "yh":
+    hortarget = "yhtarget"
+else:
+    hortarget = hor
+ax.scatter(dataTarget[hortarget], dataTarget[vert], c="r", s=5.5, alpha=0.5,label=r'\boldmath{$\rm target$}')
+
+
+
+
+ax.set_ylabel(custom_label(vert),
+                        size=20)
+ax.set_xlabel(custom_label(hor),
+                        size=20)
+
+ax.set_yscale("log")
+
+ax.set_ylim([0.001, 1500])
+#ax.set_xscale("log")
+ax.set_xlim([-7, 7])
+#plt.axhline(0.5, 0, 0.4)
+#plt.axvline(0.5, 0, 0.4)
+#plt.title(r"\boldmath{$\rm EIC$}",size=20)
+ax.text(0.65,0.15,r"\boldmath{$\rm JLab 22$}",fontsize=25,transform=ax.transAxes)
+#plt.plot(x,y1, 'b')
+ax.legend(loc='upper left',prop={"size":16},frameon=0,handletextpad=0.2,handlelength=1.2,markerscale=2.5)
+
+plt.savefig("./Figs/JLab22_data_yh_qTQ.pdf", bbox_inches='tight')
+plt.show()
+
+data["Q"]=np.sqrt(data["Q2"])
+data["qToverQ"] = data["qT"]/data["Q"]
+fig, ax, vert, hor = color_plot(data, "R2", "yh", cmap="none", alpha=0.1, cbarshow = False)
+ax.set_yscale("log")
+
+ax.set_ylim([0.001, 50000])
+#ax.set_xscale("log")
+ax.set_xlim([-15, 15])
+#plt.axhline(0.5, 0, 0.4)
+#plt.axvline(0.5, 0, 0.4)
+plt.title("$\\rm Jlab 22$",size=20)
+#plt.plot(x,y1, 'b')
+
+
+#plt.savefig("./Figs/HERMES_data_R2_R1.pdf", bbox_inches='tight')
+plt.show()
+
+fig, ax = plt.subplots()
+
+hor = "yh"
+vert = "qT"
+
+ax.tick_params(axis='both', which='major', labelsize=20, direction='in')
+
+ax.scatter(data["yh"], data[vert], c="b", alpha=0.1)
+ax.scatter(data["yp"], data[vert], c="g", alpha=0.1)
+
+
+
+ax.set_ylabel(custom_label(vert),
+                        size=20)
+ax.set_xlabel(r'$y$',
+                        size=20)
+
+ax.set_yscale("log")
+
+ax.set_ylim([0.02, 1500])
+#ax.set_xscale("log")
+ax.set_xlim([-11,11])
+#plt.axhline(0.5, 0, 0.4)
+#plt.axvline(0.5, 0, 0.4)
+plt.title("$\\rm JLab 22$",size=20)
+#plt.plot(x,y1, 'b')
+
+
+plt.savefig("./Figs/JLab22_data_y_qT.pdf", bbox_inches='tight')
+plt.show()
+
+fig, ax, vert, hor = color_plot(data, "qT", "yh", cmap="none", alpha=0.1, cbarshow = False)
+ax.set_yscale("log")
+ax.set_ylim([0.01, 600])
+#ax.set_xscale("log")
+ax.set_xlim([-10.0, 10])
+#plt.axhline(0.5, 0, 0.34)
+#plt.axvline(0.5, 0, 0.34)
+plt.title("$\\rm JLab 22$",size=20)
+
+plt.savefig("./Figs/JLab22_data_qT_yh.pdf", bbox_inches='tight')
+plt.show()
+
+fig, ax, vert, hor = color_plot(data, "qT", "yp", cmap="none", alpha=0.1, cbarshow = False)
+ax.set_yscale("log")
+ax.set_ylim([0.01, 600])
+#ax.set_xscale("log")
+ax.set_xlim([-10.0, 12])
+#plt.axhline(0.5, 0, 0.34)
+#plt.axvline(0.5, 0, 0.34)
+plt.title("$\\rm JLab 22$",size=20)
+
+plt.savefig("./Figs/JLab22_data_qT_yp.pdf", bbox_inches='tight')
+plt.show()
+
+fig, ax, vert, hor = color_plot(data, "yf", "yh", cmap="none", alpha=0.1, cbarshow = False)
+#ax.set_yscale("log")
+ax.set_ylim([-7, 7])
+#ax.set_xscale("log")
+ax.set_xlim([-7.0, 7])
+#plt.axhline(0.5, 0, 0.34)
+#plt.axvline(0.5, 0, 0.34)
+plt.title("$\\rm JLab 22$",size=20)
+
+plt.savefig("./Figs/JLab22_data_yf_yh.pdf", bbox_inches='tight')
+plt.show()
+
+fig, ax, vert, hor = color_plot(data, "yi", "yp", cmap="none", alpha=0.1, cbarshow = False)
+#ax.set_yscale("log")
+ax.set_ylim([-1, 12])
+#ax.set_xscale("log")
+ax.set_xlim([-1, 12])
+#plt.axhline(0.5, 0, 0.34)
+#plt.axvline(0.5, 0, 0.34)
+plt.title("$\\rm JLab 22$",size=20)
+
+plt.savefig("./Figs/JLab22_data_yi_yp.pdf", bbox_inches='tight')
+plt.show()
+
+data["tmd"] = data["tmdaff"]
+dataTMD = data.query("tmd > 0.99")
+
+fig, ax, vert, hor = color_plot(dataTMD, "R2", "R1", cmap="Spectral", alpha=0.8, cbarshow = True)
+ax.set_yscale("log")
+ax.set_ylim([0.01, 2])
+ax.set_xscale("log")
+ax.set_xlim([0.00001, 2])
+#plt.axhline(0.5, 0, 0.4)
+#plt.axvline(0.5, 0, 0.4)
+plt.title("$\\rm JLab 22$",size=20)
+
+plt.savefig("./Figs/JLab22_data_R2_R1_filtered.pdf", bbox_inches='tight')
+plt.show()
+
+fig, ax, vert, hor = color_plot(data, "R2", "R1", cmap="none", alpha=0.05, cbarshow = False)
+ax.set_yscale("log")
+ax.set_ylim([0.01, 200000])
+ax.set_xscale("log")
+ax.set_xlim([0.00001, 200])
+#plt.axhline(0.5, 0, 0.4)
+#plt.axvline(0.5, 0, 0.4)
+plt.title("$\\rm JLab 22$",size=20)
+
+plt.savefig("./Figs/JLab22_data_R2_R1.pdf", bbox_inches='tight')
+plt.show()
+
+fig, ax, vert, hor = color_plot(data, "R1", "R0", cmap="none", alpha=0.1, cbarshow = False)
+ax.set_yscale("log")
+ax.set_ylim([0.0001, 200])
+ax.set_xscale("log")
+ax.set_xlim([0.00001, 1])
+#plt.axhline(0.5, 0, 0.56)
+#plt.axvline(0.5, 0, 0.4)
+plt.title("$\\rm JLab 22$",size=20)
+
+plt.savefig("./Figs/JLab22_data_R1_R0.pdf", bbox_inches='tight')
+plt.show()
+
+fig, ax, vert, hor = color_plot(data, "R3", "R1p", cmap="none", alpha=0.1, cbarshow = False)
+ax.set_yscale("log")
+ax.set_ylim([0.001, 200000])
+ax.set_xscale("log")
+ax.set_xlim([0.01, 10000])
+#plt.axhline(0.5, 0.49, 1)
+#plt.axvline(0.5, 0, 0.34)
+plt.title("$\\rm JLab 22$",size=20)
+
+plt.savefig("./Figs/JLab22_data_R3_R1p.pdf", bbox_inches='tight')
+plt.show()
+
+fig, ax, vert, hor = color_plot(data, "R4", "R5", cmap="Spectral", alpha=0.8, cbarshow = True)
+ax.set_yscale("log")
+ax.set_ylim([0.0000005, 20])
+#ax.set_xscale("log")
+ax.set_xlim([-14.0001, 2])
+#plt.axhline(0.5, 0, 0.34)
+#plt.axvline(0.5, 0, 0.34)
+plt.title("$\\rm JLab 22$",size=20)
+
+plt.savefig("./Figs/JLab22_data_R4_R5.pdf", bbox_inches='tight')
+plt.show()
+
+ax, vert, hor = color_plot_hull(data_averaged, "Q2", "x", cmap="none", alpha=0.8, color='r')
+#ax.set_yscale("log")
+ax.set_ylim([0.5, 20])
+#ax.set_xscale("log")
+ax.set_xlim([0.01, 1])
+plt.title("$\\rm JLab 22$",size=20)
+plt.savefig("./Figs/JLab22_kinematics.pdf", bbox_inches='tight')
+plt.show()
+
+fig, ax, vert, hor = color_plot_hull(data, "Q2", "x", cmap="none", alpha=0.8, color='r')
+#ax.set_yscale("log")
+ax.set_ylim([0.5, 21])
+#ax.set_xscale("log")
+ax.set_xlim([0.01, 1])
+plt.title("$\\rm JLab 22$",size=20)
+plt.savefig("./Figs/JLab22_kinematics.pdf", bbox_inches='tight')
+plt.show()
+
+### TMD region
+
+data.keys()
+
+## If keys of dataset have bin_(Variable)
+
+test=data.query('bin_Q2 == 1.5')
+
+def plotJLab22_new(data, hadron = 'pi0', affinity = 'tmdaff', plotx = 'qT', ploty = 'z', cmap_name = 'seismic_r', yscale = 'linear'):
+
+    
+    data['Q']=data['Q2']**0.5
+    if 'had' not in data.keys() and 'hadron' in data.keys(): 
+        data['had'] = data['hadron']
+    
+    if 'qT' not in data.keys():
+        data['qT'] = data['pT']/data['z']
+        
+    if 'qToverQ' not in data.keys():
+        data['qToverQ'] = data['qT']/data['Q']
+
+        
+    Q2b=data.binQ2.unique()    
+    xb=data.binx.unique()
+    zbins=data.binz.unique()    
+    #Q2b=data.Q2.unique()    
+    #xb=data.x.unique()
+    #zbins=data.z.unique()    
+    
+    bins={}
+    
+    for ix in range(len(xb)):
+        for iQ2 in range(len(Q2b)):
+            #print "iQ2=", len(Q2b)-iQ2-1, " ix= ", ix, ": ","Q2=="+str(Q2b[iQ2])+" and x=="+str(xb[ix])
+            msg="binQ2=="+str(Q2b[iQ2])+" and binx=="+str(xb[ix])
+            if data.query(msg).index.size != 0:
+                bins[(len(Q2b)-iQ2-1,ix)]=msg
+
+    
+    
+    nrows,ncols=len(Q2b),len(xb)
+    fig = py.figure(figsize=(ncols*3.2,nrows*3.2))
+    gs = gridspec.GridSpec(nrows,ncols)
+    gs.update(wspace=0.,hspace=0,left=0.12, right=0.86,bottom=0.13,top=0.86)
+    AX={}
+    cmap = plt.get_cmap(cmap_name) # choose cmap
+    
+
+    # add a smaller subplot to explain axes
+    leftb, bottomb, widthb, heightb = [0.2, 0.65, 0.15, 0.18]
+    ax2 = fig.add_axes([leftb, bottomb, widthb, heightb])
+    
+    
+    for k in sorted(bins):
+        ir,ic=k
+        #print k
+        ax = py.subplot(gs[ir,ic])
+        ax.set_xlim(0,8)
+        ax.set_ylim(0,1)
+        #ax.set_xlim(0,data.qT.max())
+        # Set the font name for axis tick labels to be Times New Roman
+        #for tick in ax.get_xticklabels():
+        #    tick.set_fontname("Comic Sans MS")
+        #for tick in ax.get_yticklabels():
+        #    tick.set_fontname("Comic Sans MS")
+
+
+        if ploty == 'z': 
+            ax.set_xlim(0,1) # z is in [0,1]
+            ax2.set_xlim(0,1)
+            ax2.set_xlabel(r'\boldmath{$z_h$}', fontsize=70) 
+        if plotx == 'pT': 
+            if affinity.startswith('col'):
+                max = 2.2
+            elif affinity.startswith('tmd'):
+                max = 2.2
+            elif affinity.startswith('soft'):
+                max = 2.2
+            elif affinity.startswith('target'):
+                max = 2.2
+            else:
+                max = 2.2
+            ax.set_ylim(0,max) # pT is in [0,2]
+            ax2.set_ylim(0,max)
+            ax2.set_ylabel(r'\boldmath{$P_{hT} \; \rm (GeV)$}', fontsize=70) 
+        if plotx == 'qT': 
+            ax.set_ylim(0,15) #(0,data.qT.max())
+            ax2.set_ylim(0,15)
+            ax2.set_ylabel(r'$q_T \; \rm (GeV)$', fontsize=70)
+        if plotx == 'qToverQ': 
+            if affinity.startswith('tmd'):
+                ax.set_ylim(0,1) #(0,data.qT.max())
+                ax2.set_ylim(0,1)
+                ax2.set_ylabel(r'\boldmath{$q_T/Q$}', fontsize=70)
+            if affinity.startswith('col') or affinity.startswith('target'):
+                ax.set_ylim(0,10) #(0,data.qT.max())
+                ax2.set_ylim(0,10)
+                ax2.set_ylabel(r'\boldmath{$q_T/Q$}', fontsize=70)
+            if affinity.startswith('match') or affinity.startswith('soft'):
+                ax.set_ylim(0,3) #(0,data.qT.max())
+                ax2.set_ylim(0,3)
+                ax2.set_ylabel(r'\boldmath{$q_T/Q$}', fontsize=70)
+
+
+
+            
+ 
+                    
+            
+        ax.set_yscale(yscale) # log or linear
+        ax2.set_yscale(yscale)
+        
+        # Plot 5 ticks on x and y axis and drop the first and the last ones to avoid overlay:
+        xticks = np.round(np.linspace(ax.get_xlim()[0],ax.get_xlim()[1],5),1)[1:4]
+        yticks = np.round(np.linspace(ax.get_ylim()[0],ax.get_ylim()[1],5),1)[1:4]
+        
+        ax2.set_xticks(xticks)
+        ax2.set_yticks(yticks)
+        ax2.set_xticklabels(xticks, fontsize=55)  
+        ax2.set_yticklabels(yticks, fontsize=55)
+        #ax2.tick_params(axis='both', which='major', direction='in')
+        
+        ax.set_xticks(xticks)
+        ax.set_yticks(yticks)
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        
+        if  below(bins,ir,ic)==False : # no bins below
+            ax.set_xticklabels(xticks)
+        if  left(bins,ir,ic)==False : # no bins to the left
+            ax.set_yticklabels(yticks)   
+        
+        
+        d=data.query('%s and  had=="%s"'%(bins[k],hadron))
+        
+        for i in range(len(zbins)):
+            #somehow simple query does not work:
+            #dd=d.query('z==%f'%zbins[i])
+            #AP# msg='z > '+str(zbins[i]-zbins[i]/100)+' and z < '+ str(zbins[i]+zbins[i]/100)
+            msg='binz=='+str(zbins[i])
+            dd=d.query(msg)
+            if dd.index.size==0: continue
+            #plot = ax.scatter(dd[plotx],dd[ploty], s=500*dd[affinity], c=dd[affinity], 
+            #                      cmap=cmap, alpha=0.8,vmin=0,vmax=1,label='') 
+            #ax.plot(dd[plotx],dd[ploty],'k-', alpha=0.25,label='') 
+            plot = ax.scatter(dd[ploty],dd[plotx], s=500*dd[affinity]**0.2+10, c=dd[affinity], 
+                                  cmap=cmap, alpha=0.8,vmin=0,vmax=1,label='') 
+            ax.plot(dd[ploty],dd[plotx],'k-', alpha=0.25,label='')
+            #ax.text(0, 1.6, k, fontsize=18) # show what bin is shown
+            if k == (7,7):
+                ax2.scatter(dd[ploty],dd[plotx], s=2500*dd[affinity]**0.2+20, c=dd[affinity], 
+                                  cmap=cmap, alpha=0.8,vmin=0,vmax=1,label='') 
+                ax2.plot(dd[ploty],dd[plotx],'k-', alpha=0.25,label='')
+                ax.annotate('',xy=(0.,1),xycoords='axes fraction',xytext=(-1.8,2), 
+                            arrowprops=dict(arrowstyle="->, head_width=1, head_length=2", color='k',lw=4))
+                  
+                
+                
+        ax.tick_params(axis='both', which='major', labelsize=32, direction='in')
+        
+        
+        # Add embelishment here:
+        if  below(bins,ir,ic)==False and left(bins,ir,ic)==False:    
+
+            ax.annotate('', xy=(-0.35, 20.2),#9.2), 
+                        xycoords='axes fraction', 
+                        xytext=(-0.35, -0.1),
+                        arrowprops=dict(arrowstyle="-|>, head_width=1, head_length=2", 
+                        color='k',lw=3))
+
+            ax.annotate('', xy=(21.,-0.3), 
+                        xycoords='axes fraction', 
+                        xytext=(-0.1, -0.3),
+                        arrowprops=dict(arrowstyle="-|>, head_width=1, head_length=2", 
+                        color='k',lw=3))        
+
+            ax.annotate(r'\boldmath{$Q^2~({\rm GeV}^2)$}', 
+                        xy=(-1.5,7.5),
+                        xycoords='axes fraction',
+                        size=80,
+                        rotation=90)
+
+            ax.annotate(r'\boldmath{$x_{\rm Bj}$}', 
+                        xy=(10.9,-1.2),
+                        xycoords='axes fraction',
+                        size=90)
+                    
+            for i in range(len(xb)):
+                #if xb[i]<2e-3: msg=r'$%0.5f$'%xb[i]
+                #elif xb[i]<2e-2: msg=r'$%0.3f$'%xb[i]  
+                if xb[i]<2e-3: #msg=r'$%0.e$'%xb[i]
+                    scientific_notation = "{:.1e}".format(xb[i])
+                    scientific_notation.split("e")
+                    msg = '$'+scientific_notation.split("e")[0] + '\\cdot 10^{' + scientific_notation.split("e")[1][:1] + scientific_notation.split("e")[1][2:]+ '}$' 
+                elif xb[i]<2e-2: msg=r'$%0.3f$'%xb[i]  
+                else:msg=r'$%0.2f$'%xb[i]
+                ax.text(0.5+i,-0.65,msg,transform=ax.transAxes,size=40,ha="center")
+                ax.annotate('',xy=(i,-0.35),xycoords='axes fraction',xytext=(i+1, -0.35), 
+                            arrowprops=dict(arrowstyle="<->", color='k'))
+    
+            for i in range(len(Q2b)):
+                ax.text(-0.65,0.5+i,r'$%0.1f$'%Q2b[i],
+                      transform=ax.transAxes,size=45,rotation=90,va="center")
+                ax.annotate('',xy=(-0.4,i),xycoords='axes fraction',xytext=(-0.4,i+1), 
+                            arrowprops=dict(arrowstyle="<->", color='k'))
+                
+        #if plotx == 'qT': ax.plot([d.Q.values[0],8],[2e-4,2e-4],c='y',lw=10,alpha=0.5) # plot qt>Q region
+            
+        
+        if below(bins,ir,ic)==False and left(bins,ir,ic)==False:    # otherwise just plot qt>Q
+            #qTrange = mpatches.Rectangle((0,0), 0, 0, ec="none",color='y',alpha=0.5)
+            #ax.legend([qTrange],[r'$q_{\rm T}>Q$']\
+            #        ,bbox_to_anchor=[-1.2, 1.]\
+            #        ,loc='center',fontsize=40,frameon=0) # legend for the lines in the plot  
+            label1 = ' '
+            if affinity.startswith('tmd'): 
+                label1 = 'TMD'
+            elif affinity.startswith('col'): 
+                label1 = 'Collinear' 
+            elif affinity.startswith('target'): 
+                label1 = 'Target' 
+            elif affinity.startswith('soft'): 
+                label1 = 'Central'
+            elif affinity.startswith('highorder'): 
+                label1 = 'High order'
+            elif affinity.startswith('match'): 
+                label1 = 'Matching'
+            elif affinity.startswith('unclassified'): 
+                label1 = 'Unclassified'
+
+            #msg=r'${\rm %s~region~EIC~%s}$'%(label1,hadron)
+            msg=r'\boldmath{${\rm %s~region~JLab~22}$}'%(label1)
+            ax.text(0,18.8,msg,transform=ax.transAxes,size=90)
+            #msg =r'${\sqrt{s}=140 \; \; \rm GeV}$'
+            #ax.text(0,8.2,msg,transform=ax.transAxes,size=80)
+            #msg =r'${\rm %s~vs.~%s}$'%(ploty,plotx)
+            #ax.text(0,5.2,msg,transform=ax.transAxes,size=80)
+            
+            # plot the legend of axes
+            ax.legend(bbox_to_anchor=[3, -2.5], loc='center',fontsize=30,frameon=0\
+                   ,markerscale=2,handletextpad=0.1)
+    
+
+    
+    cbar_ax = fig.add_axes([0.87, 0.2, 0.01, 0.5])
+    cbar = fig.colorbar(plot,cax=cbar_ax)
+    cbar.ax.tick_params(labelsize=40)
+    #plt.show()
+    outname = 'JLab22_%s_vs_%s_%s_%s_pip'%(ploty,plotx,hadron,affinity)
+    py.savefig('Figs/%s.pdf'%outname)    
+
+## If keys of dataset have bin_c_(Variable)
+
+test=data.query('bin_c_Q2 == 1.5')
+
+def plotJLab22_new(data, hadron = 'pi0', affinity = 'tmdaff', plotx = 'qT', ploty = 'z', cmap_name = 'seismic_r', yscale = 'linear'):
+
+    
+    data['Q']=data['Q2']**0.5
+    if 'had' not in data.keys() and 'hadron' in data.keys(): 
+        data['had'] = data['hadron']
+    
+    if 'qT' not in data.keys():
+        data['qT'] = data['pT']/data['z']
+        
+    if 'qToverQ' not in data.keys():
+        data['qToverQ'] = data['qT']/data['Q']
+
+        
+    Q2b=data.bin_c_Q2.unique()    
+    xb=data.bin_c_x.unique()
+    zbins=data.bin_c_z.unique()    
+    #Q2b=data.Q2.unique()    
+    #xb=data.x.unique()
+    #zbins=data.z.unique()    
+    
+    bins={}
+    
+    for ix in range(len(xb)):
+        for iQ2 in range(len(Q2b)):
+            #print "iQ2=", len(Q2b)-iQ2-1, " ix= ", ix, ": ","Q2=="+str(Q2b[iQ2])+" and x=="+str(xb[ix])
+            msg="bin_c_Q2=="+str(Q2b[iQ2])+" and bin_c_x=="+str(xb[ix])
+            if data.query(msg).index.size != 0:
+                bins[(len(Q2b)-iQ2-1,ix)]=msg
+
+    
+    
+    nrows,ncols=len(Q2b),len(xb)
+    fig = py.figure(figsize=(ncols*3.2,nrows*3.2))
+    gs = gridspec.GridSpec(nrows,ncols)
+    gs.update(wspace=0.,hspace=0,left=0.12, right=0.86,bottom=0.13,top=0.86)
+    AX={}
+    cmap = plt.get_cmap(cmap_name) # choose cmap
+    
+
+    # add a smaller subplot to explain axes
+    leftb, bottomb, widthb, heightb = [0.2, 0.65, 0.15, 0.18]
+    ax2 = fig.add_axes([leftb, bottomb, widthb, heightb])
+    
+    
+    for k in sorted(bins):
+        ir,ic=k
+        #print k
+        ax = py.subplot(gs[ir,ic])
+        ax.set_xlim(0,8)
+        ax.set_ylim(0,1)
+        #ax.set_xlim(0,data.qT.max())
+        # Set the font name for axis tick labels to be Times New Roman
+        #for tick in ax.get_xticklabels():
+        #    tick.set_fontname("Comic Sans MS")
+        #for tick in ax.get_yticklabels():
+        #    tick.set_fontname("Comic Sans MS")
+
+
+        if ploty == 'z': 
+            ax.set_xlim(0,1) # z is in [0,1]
+            ax2.set_xlim(0,1)
+            ax2.set_xlabel(r'\boldmath{$z_h$}', fontsize=70) 
+        if plotx == 'pT': 
+            if affinity.startswith('col'):
+                max = 2.2
+            elif affinity.startswith('tmd'):
+                max = 2.2
+            elif affinity.startswith('soft'):
+                max = 2.2
+            elif affinity.startswith('target'):
+                max = 2.2
+            else:
+                max = 2.2
+            ax.set_ylim(0,max) # pT is in [0,2]
+            ax2.set_ylim(0,max)
+            ax2.set_ylabel(r'\boldmath{$P_{hT} \; \rm (GeV)$}', fontsize=70) 
+        if plotx == 'qT': 
+            ax.set_ylim(0,15) #(0,data.qT.max())
+            ax2.set_ylim(0,15)
+            ax2.set_ylabel(r'$q_T \; \rm (GeV)$', fontsize=70)
+        if plotx == 'qToverQ': 
+            if affinity.startswith('tmd'):
+                ax.set_ylim(0,1) #(0,data.qT.max())
+                ax2.set_ylim(0,1)
+                ax2.set_ylabel(r'\boldmath{$q_T/Q$}', fontsize=70)
+            if affinity.startswith('col') or affinity.startswith('target'):
+                ax.set_ylim(0,10) #(0,data.qT.max())
+                ax2.set_ylim(0,10)
+                ax2.set_ylabel(r'\boldmath{$q_T/Q$}', fontsize=70)
+            if affinity.startswith('match') or affinity.startswith('soft'):
+                ax.set_ylim(0,3) #(0,data.qT.max())
+                ax2.set_ylim(0,3)
+                ax2.set_ylabel(r'\boldmath{$q_T/Q$}', fontsize=70)
+
+
+
+            
+ 
+                    
+            
+        ax.set_yscale(yscale) # log or linear
+        ax2.set_yscale(yscale)
+        
+        # Plot 5 ticks on x and y axis and drop the first and the last ones to avoid overlay:
+        xticks = np.round(np.linspace(ax.get_xlim()[0],ax.get_xlim()[1],5),1)[1:4]
+        yticks = np.round(np.linspace(ax.get_ylim()[0],ax.get_ylim()[1],5),1)[1:4]
+        
+        ax2.set_xticks(xticks)
+        ax2.set_yticks(yticks)
+        ax2.set_xticklabels(xticks, fontsize=55)  
+        ax2.set_yticklabels(yticks, fontsize=55)
+        #ax2.tick_params(axis='both', which='major', direction='in')
+        
+        ax.set_xticks(xticks)
+        ax.set_yticks(yticks)
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        
+        if  below(bins,ir,ic)==False : # no bins below
+            ax.set_xticklabels(xticks)
+        if  left(bins,ir,ic)==False : # no bins to the left
+            ax.set_yticklabels(yticks)   
+        
+        
+        d=data.query('%s and  had=="%s"'%(bins[k],hadron))
+        
+        for i in range(len(zbins)):
+            #somehow simple query does not work:
+            #dd=d.query('z==%f'%zbins[i])
+            #AP# msg='z > '+str(zbins[i]-zbins[i]/100)+' and z < '+ str(zbins[i]+zbins[i]/100)
+            msg='bin_c_z=='+str(zbins[i])
+            dd=d.query(msg)
+            if dd.index.size==0: continue
+            #plot = ax.scatter(dd[plotx],dd[ploty], s=500*dd[affinity], c=dd[affinity], 
+            #                      cmap=cmap, alpha=0.8,vmin=0,vmax=1,label='') 
+            #ax.plot(dd[plotx],dd[ploty],'k-', alpha=0.25,label='') 
+            plot = ax.scatter(dd[ploty],dd[plotx], s=500*dd[affinity]**0.2+10, c=dd[affinity], 
+                                  cmap=cmap, alpha=0.8,vmin=0,vmax=1,label='') 
+            ax.plot(dd[ploty],dd[plotx],'k-', alpha=0.25,label='')
+            #ax.text(0, 1.6, k, fontsize=18) # show what bin is shown
+            if k == (7,7):
+                ax2.scatter(dd[ploty],dd[plotx], s=2500*dd[affinity]**0.2+20, c=dd[affinity], 
+                                  cmap=cmap, alpha=0.8,vmin=0,vmax=1,label='') 
+                ax2.plot(dd[ploty],dd[plotx],'k-', alpha=0.25,label='')
+                ax.annotate('',xy=(0.,1),xycoords='axes fraction',xytext=(-1.8,2), 
+                            arrowprops=dict(arrowstyle="->, head_width=1, head_length=2", color='k',lw=4))
+                  
+                
+                
+        ax.tick_params(axis='both', which='major', labelsize=32, direction='in')
+        
+        
+        # Add embelishment here:
+        if  below(bins,ir,ic)==False and left(bins,ir,ic)==False:    
+
+            ax.annotate('', xy=(-0.35, 20.2),#9.2), 
+                        xycoords='axes fraction', 
+                        xytext=(-0.35, -0.1),
+                        arrowprops=dict(arrowstyle="-|>, head_width=1, head_length=2", 
+                        color='k',lw=3))
+
+            ax.annotate('', xy=(21.,-0.3), 
+                        xycoords='axes fraction', 
+                        xytext=(-0.1, -0.3),
+                        arrowprops=dict(arrowstyle="-|>, head_width=1, head_length=2", 
+                        color='k',lw=3))        
+
+            ax.annotate(r'\boldmath{$Q^2~({\rm GeV}^2)$}', 
+                        xy=(-1.5,7.5),
+                        xycoords='axes fraction',
+                        size=80,
+                        rotation=90)
+
+            ax.annotate(r'\boldmath{$x_{\rm Bj}$}', 
+                        xy=(10.9,-1.2),
+                        xycoords='axes fraction',
+                        size=90)
+                    
+            for i in range(len(xb)):
+                #if xb[i]<2e-3: msg=r'$%0.5f$'%xb[i]
+                #elif xb[i]<2e-2: msg=r'$%0.3f$'%xb[i]  
+                if xb[i]<2e-3: #msg=r'$%0.e$'%xb[i]
+                    scientific_notation = "{:.1e}".format(xb[i])
+                    scientific_notation.split("e")
+                    msg = '$'+scientific_notation.split("e")[0] + '\\cdot 10^{' + scientific_notation.split("e")[1][:1] + scientific_notation.split("e")[1][2:]+ '}$' 
+                elif xb[i]<2e-2: msg=r'$%0.3f$'%xb[i]  
+                else:msg=r'$%0.2f$'%xb[i]
+                ax.text(0.5+i,-0.65,msg,transform=ax.transAxes,size=40,ha="center")
+                ax.annotate('',xy=(i,-0.35),xycoords='axes fraction',xytext=(i+1, -0.35), 
+                            arrowprops=dict(arrowstyle="<->", color='k'))
+    
+            for i in range(len(Q2b)):
+                ax.text(-0.65,0.5+i,r'$%0.1f$'%Q2b[i],
+                      transform=ax.transAxes,size=45,rotation=90,va="center")
+                ax.annotate('',xy=(-0.4,i),xycoords='axes fraction',xytext=(-0.4,i+1), 
+                            arrowprops=dict(arrowstyle="<->", color='k'))
+                
+        #if plotx == 'qT': ax.plot([d.Q.values[0],8],[2e-4,2e-4],c='y',lw=10,alpha=0.5) # plot qt>Q region
+            
+        
+        if below(bins,ir,ic)==False and left(bins,ir,ic)==False:    # otherwise just plot qt>Q
+            #qTrange = mpatches.Rectangle((0,0), 0, 0, ec="none",color='y',alpha=0.5)
+            #ax.legend([qTrange],[r'$q_{\rm T}>Q$']\
+            #        ,bbox_to_anchor=[-1.2, 1.]\
+            #        ,loc='center',fontsize=40,frameon=0) # legend for the lines in the plot  
+            label1 = ' '
+            if affinity.startswith('tmd'): 
+                label1 = 'TMD'
+            elif affinity.startswith('col'): 
+                label1 = 'Collinear' 
+            elif affinity.startswith('target'): 
+                label1 = 'Target' 
+            elif affinity.startswith('soft'): 
+                label1 = 'Central'
+            elif affinity.startswith('highorder'): 
+                label1 = 'High order'
+            elif affinity.startswith('match'): 
+                label1 = 'Matching'
+            elif affinity.startswith('unclassified'): 
+                label1 = 'Unclassified'
+
+            #msg=r'${\rm %s~region~EIC~%s}$'%(label1,hadron)
+            msg=r'\boldmath{${\rm %s~region~JLab~22}$}'%(label1)
+            ax.text(0,18.8,msg,transform=ax.transAxes,size=90)
+            #msg =r'${\sqrt{s}=140 \; \; \rm GeV}$'
+            #ax.text(0,8.2,msg,transform=ax.transAxes,size=80)
+            #msg =r'${\rm %s~vs.~%s}$'%(ploty,plotx)
+            #ax.text(0,5.2,msg,transform=ax.transAxes,size=80)
+            
+            # plot the legend of axes
+            ax.legend(bbox_to_anchor=[3, -2.5], loc='center',fontsize=30,frameon=0\
+                   ,markerscale=2,handletextpad=0.1)
+    
+
+    
+    cbar_ax = fig.add_axes([0.87, 0.2, 0.01, 0.5])
+    cbar = fig.colorbar(plot,cax=cbar_ax)
+    cbar.ax.tick_params(labelsize=40)
+    #plt.show()
+    outname = 'JLab22_%s_vs_%s_%s_%s_R_range_0.7'%(ploty,plotx,hadron,affinity)
+    py.savefig('Figs/%s.pdf'%outname)    
+
+plotJLab22_new(data, hadron = 'pi0', affinity = 'tmdaff', plotx = 'pT', ploty = 'z', cmap_name = 'Spectral', yscale = 'linear')
+
+data.x.unique()
+
+### TMD non perturbative affinity
+
+plotJLab22(data, hadron = 'pi+', affinity = 'tmdnpaff', plotx = 'pT', ploty = 'z', cmap_name = 'Spectral', yscale = 'linear')
+
+### "collinear" region of QCD
+
+plotJLab22_new(data, hadron = 'pi0', affinity = 'collinearaff', plotx = 'pT', ploty = 'z', cmap_name = 'Spectral', yscale = 'linear')
+
+plotJLab22_new(data ,hadron = 'pi+', affinity = 'collinearaff', plotx = 'qToverQ', ploty = 'z', cmap_name = 'Spectral', yscale = 'linear')
+
+### "collinear high order" region of QCD
+
+plotJLab22(data ,hadron = 'pi+', affinity = 'collinearhighorderaff', plotx = 'pT', ploty = 'z', cmap_name = 'Spectral', yscale = 'linear')
+
+### "collinear low order" region of QCD
+
+plotJLab22(data ,hadron = 'pi+', affinity = 'collinearloworderaff', plotx = 'pT', ploty = 'z', cmap_name = 'Spectral', yscale = 'linear')
+
+### "matching" region 
+
+plotJLab22(data ,hadron = 'pi+', affinity = 'matchaff', plotx = 'qToverQ', ploty = 'z', cmap_name = 'Spectral', yscale = 'linear')
+
+plotJLab22_new(data ,hadron = 'pi+', affinity = 'matchaff', plotx = 'pT', ploty = 'z', cmap_name = 'Spectral', yscale = 'linear')
+
+### "target" region
+
+plotJLab22(data ,hadron = 'pi+', affinity = 'targetaff', plotx = 'qToverQ', ploty = 'z', cmap_name = 'Spectral', yscale = 'linear')
+
+plotJLab22(data ,hadron = 'pi+', affinity = 'targetaff', plotx = 'pT', ploty = 'z', cmap_name = 'Spectral', yscale = 'linear')
+
+### "soft" region 
+
+plotJLab22(data ,hadron = 'pi+', affinity = 'softaff', plotx = 'qToverQ', ploty = 'z', cmap_name = 'Spectral', yscale = 'linear')
+
+plotJLab22(data ,hadron = 'pi+', affinity = 'softaff', plotx = 'pT', ploty = 'z', cmap_name = 'Spectral', yscale = 'linear')
+
+### unclassified region
+
+plotJLab22(data ,hadron = 'pi+', affinity = 'unclassifiedaff', plotx = 'pT', ploty = 'z', cmap_name = 'Spectral', yscale = 'linear')
+
+from scipy.spatial import ConvexHull, convex_hull_plot_2d
+def plotkin():
+    fname = 'data/jlab12.xlsx'
+    data=pd.read_excel(fname)
+
+
+    vert_lab = "Q2" 
+    hor_lab = "x"
+    alpha=0.8
+    
+    
+    fig, ax = plt.subplots()
+    ax.tick_params(axis='both', which='minor', labelsize=30, direction='in')
+    #ax.tick_params(axis='both', which='major', labelsize=20, direction='in')
+    #ax.tick_params(axis='both', which='both', labelsize=20, direction='in')
+    #ax.tick_params(axis=‘both’, which=‘both’, labelsize=20, direction=‘in’, length=6)
+
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    
+    
+    ax.set_ylabel(custom_label(vert_lab),
+                            size=20)
+    ax.set_xlabel(custom_label(hor_lab),
+                            size=20)
+
+    
+    
+    # JLab12
+    vert = data[vert_lab].values
+    hor = data[hor_lab].values
+
+
+    colors = data["tmdaff"]
+
+    
+    plot = ax.scatter(hor, vert, c="r", alpha=0.8, s=5.5, zorder=12)
+
+    points = np.ndarray(shape=(len(vert),2), dtype=float)
+    print(len(vert))
+    for i in range(len(vert)):
+            points[i,0] = hor[i]
+            points[i,1] = vert[i]
+
+    hull = ConvexHull(points)
+
+    for simplex in hull.simplices:
+            ax.plot(points[simplex, 0], points[simplex, 1], 'r-', alpha=alpha,zorder=11) 
+    ax.fill(points[hull.vertices,0], points[hull.vertices,1], 'r',edgecolor='r', alpha=0.3, label=r'\boldmath{$\rm JLab12$}',zorder=5)
+
+    
+    
+
+
+    # JLab22
+    fname = 'data/JLab22_pipaffinity0.3.xlsx'
+    data=pd.read_excel(fname)
+    vert_labJ = "nQ2" 
+    hor_labJ = "x"
+
+
+    vert = data[vert_labJ].values
+    hor = data[hor_labJ].values
+
+    colors = data["tmdaff"]
+
+
+    
+    plot = ax.scatter(hor, vert, c="b", alpha=0.8, s=5.5, zorder=7)
+    
+    points = np.ndarray(shape=(len(vert),2), dtype=float)
+    print(len(vert))
+    for i in range(len(vert)):
+            points[i,0] = hor[i]
+            points[i,1] = vert[i]
+
+    hull = ConvexHull(points)
+
+    for simplex in hull.simplices:
+            ax.plot(points[simplex, 0], points[simplex, 1], 'b-', alpha=alpha,zorder=6) 
+    ax.fill(points[hull.vertices,0], points[hull.vertices,1], 'b', edgecolor='b', alpha=0.3, label=r'\boldmath{$\rm JLab22$}',zorder=10)
+
+
+    fig.tight_layout()
+
+    ax.legend(prop={"size":16},frameon=0,handletextpad=0.3)
+
+    ax.set_yscale("log")
+    ax.set_ylim([0, 100])
+    ax.set_xscale("log")
+    ax.set_xlim([0.04, 1])
+
+    plt.savefig("./Figs/experiments_kinematics_Jlab_EIC.pdf", bbox_inches='tight')
+    plt.show()
+
+plotkin()    
+
 
